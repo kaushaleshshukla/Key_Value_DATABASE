@@ -1,0 +1,41 @@
+<html>
+	<head> </head>
+	<body>
+		<div>
+			<h3>Set</h3>
+			<form name="set" action="/api/command/set" method="post">
+				Key<br/>
+				<input name="key" id="key">
+				<br/>Value<br/>
+				<input name="value" id="value">
+                <br/>EX Seconds<br/>
+				<input type = "number", name="EX" id="EX" placeholder=0>
+                <br/>PX Milliseconds<br/>
+                <input type = "number", name="PX" id="PX"><br/>
+                <input type="radio" id="NX" name="type" value="PX">
+                <label for="NX">NX</label>
+                <input type="radio" id="XX" name="type" value="NX">
+                <label for="XX">XX</label>
+                <input type="radio" id="None" name="type" value="None" checked>
+                <label for="None">None</label><br>
+                <input type="checkbox" name="KEEPTTL" value=true>
+                <label for="KEEPTTL">KEEPTTL</label><br/>
+				<input type="submit" value="SUBMIT">
+			</form>
+			<h3>GET</h3>
+			<form name="get" action="/api/command/get" method="get">
+				Key<br/>
+				<input name="key" id="key"><br/>
+				<input type="submit" value="SUBMIT">
+            </form>
+            <h3>EXPIRE</h3>
+			<form name="expire" action="/api/command/expire" method="post">
+				Key<br/>
+                <input name="key" id="key"><br/>
+                Seconds<br/>
+                <input type="number" name="seconds" id = "seconds"><br/>
+				<input type="submit" value="SUBMIT">
+			</form>
+		</div>
+	</body>
+</html>
