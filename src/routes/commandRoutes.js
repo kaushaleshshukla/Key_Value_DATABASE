@@ -11,7 +11,6 @@ const zvalues = FastMap();
 let router = function(){
     commandRouter.route('/set')
         .post( (req, res) => {
-            console.log(req.body);
             const hasKey = map.has(req.body.key);
 
             //getting time to live
@@ -84,7 +83,6 @@ let router = function(){
 
     commandRouter.route('/get')
         .get( (req, res) => {
-            console.log(req.query.key);
             const hasKey = map.has(req.query.key);
             if(!hasKey){
                 res.send("Nil");
@@ -108,7 +106,6 @@ let router = function(){
 
     commandRouter.route('/expire')
         .post( (req, res) => {
-            console.log(req.body);
             const hasKey = map.has(req.body.key);
             if(!hasKey){
                 res.send("0");
@@ -132,12 +129,10 @@ let router = function(){
     
     commandRouter.route('/zadd')
         .post( (req, res) =>{
-            console.log("inside zadd");
-            console.log(req.body);
             const hasKey = map.has(req.body.key);
             if(hasKey){
 
-                if(typeof(map.get(req.body.key)) == 'string')
+                if(!zvalues.has(req.body.key))
                     res.send("Error");
 
                 
@@ -197,12 +192,24 @@ let router = function(){
 
     commandRouter.route('/zrank')
         .get( (req, res) =>{
-            console.log()
+            if(map.has(req.query.key) && zvalues.has(req.query.key) && zvalues.get(req.query.key).has(req.query.member)){
+                //getting index
+                let index = map.get(req.query.key).indexOf([1*zvalues.get(req.query.key).get(req.query.member), req.query.member]);
+                data = {
+                    index : index
+                }
+                res.send(data);
+            }
+            else{
+                //element not present
+                res.send("nil");
+            }
         });
 
     commandRouter.route('/zrange')
         .get( (req, res) =>{
-
+            console.log("inside zrange");
+            console.log(req.query);
         });
 
     // Page not found
