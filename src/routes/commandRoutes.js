@@ -2,8 +2,10 @@ const express = require("express");
 const commandRouter = express.Router();
 const MongoClient = require('mongodb').MongoClient;
 const FastMap = require("collections/fast-map");
+const SortedSet = require("collections/sorted-set");
 
 const map = FastMap();
+const zvalues = FastMap();
 
 
 let router = function(){
@@ -18,12 +20,9 @@ let router = function(){
                 //current time in millisecond
                 TTL =  Date.now();
                 if(req.body.EX){
-                    console.log("Got Ex");
                     TTL += 1000*req.body.EX;
                 }
                 if(req.body.PX){
-                    
-                    console.log("Got Px");
                     TTL += 1*req.body.PX;
                 }
                 console.log(TTL);
@@ -102,7 +101,7 @@ let router = function(){
                     res.send("Nil");
                 }
                 else{
-                    res.send(obj.value);
+                    res.send(obj);
                 }
             }
         });
@@ -130,12 +129,88 @@ let router = function(){
             
             
         });
+    
+    commandRouter.route('/zadd')
+        .post( (req, res) =>{
+            console.log("inside zadd");
+            console.log(req.body);
+            const hasKey = map.has(req.body.key);
+            if(hasKey){
+
+                if(typeof(map.get(req.body.key)) == 'string')
+                    res.send("Error");
+
+                
+                else{
+                    // checking for existance of current value in corresponding key
+                    if(zvalues.get(req.body.key).has(req.body.value)){
+                        // element found with same value
+                        if(req.body.type=='XX' || req.body.type=='None'){
+                            let score = 1*zvalues.get(req.body.key).get(req.body.value);
+
+                            //deleting old instance of same value
+                            zvalues.get(req.body.key).delete(req.body.value);
+                            map.get(req.body.key).delete([score, req.body.value]);
+
+                            //reinserting the element
+                            zvalues.get(req.body.key).add(1*req.body.score, req.body.value);
+                            map.get(req.body.key).push([1*req.body.score, req.body.value]);
+                            res.send("1");
+                        }
+
+                        else{
+                            res.send("nil");
+                        }
+                    }
+
+                    else{
+                        // element is not present in set
+                        if(req.body.type=='XX'){
+                            res.send('nil');
+                        }
+                        else{
+                            //inserting the element
+                            zvalues.get(req.body.key).add(1*req.body.score, req.body.value);
+                            map.get(req.body.key).push([1*req.body.score, req.body.value]);
+                            res.send("1");
+                        }
+                    }
+                    
+                }
+            }
+            else{
+                //generating a new SortedSet
+                let currentSet = SortedSet();
+                currentSet.push([1*req.body.score, req.body.value]);
+
+                //generating a new FastMap
+                let currentMap = FastMap();
+                currentMap.add(1*req.body.score, req.body.value);
+
+                //inserting element
+                map.add(currentSet, req.body.key);
+                zvalues.add(currentMap, req.body.key);
+
+                res.send("1");
+            }
+        });
+
+    commandRouter.route('/zrank')
+        .get( (req, res) =>{
+            console.log()
+        });
+
+    commandRouter.route('/zrange')
+        .get( (req, res) =>{
+
+        });
+
     // Page not found
 	commandRouter.route('/*')
         .all( (req, res) => {
             res.statusCode = 404;
             res.statusMessage = "Page Not Found";
-            res.send("Page not found");
+            res.send("Oops! I haven't implemented this yet :(");
         });
     return commandRouter;
 }

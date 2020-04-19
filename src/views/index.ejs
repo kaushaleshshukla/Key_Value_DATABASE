@@ -2,6 +2,7 @@
 	<head> </head>
 	<body>
 		<div>
+            <!-- Set  -->
 			<h3>Set</h3>
 			<form name="set" action="/api/command/set" method="post">
 				Key<br/>
@@ -9,9 +10,9 @@
 				<br/>Value<br/>
 				<input name="value" id="value">
                 <br/>EX Seconds<br/>
-				<input type = "number", name="EX" id="EX" placeholder=0>
+				<input type = "number", name="EX" id="EX" placeholder="Null">
                 <br/>PX Milliseconds<br/>
-                <input type = "number", name="PX" id="PX"><br/>
+                <input type = "number", name="PX" id="PX" placeholder="Null"><br/>
                 <input type="radio" id="NX" name="type" value="PX">
                 <label for="NX">NX</label>
                 <input type="radio" id="XX" name="type" value="NX">
@@ -33,7 +34,27 @@
 				Key<br/>
                 <input name="key" id="key"><br/>
                 Seconds<br/>
-                <input type="number" name="seconds" id = "seconds"><br/>
+                <input type="number" name="seconds" id = "seconds" placeholder="Null"><br/>
+				<input type="submit" value="SUBMIT">
+            </form>
+            <h3>ZADD</h3>
+			<form name="zadd" action="/api/command/zadd" method="post">
+				Key<br/>
+                <input name="key" id="key">
+                <br/>Score<br/>
+				<input name="score" id="score" type="number">
+				<br/>Value<br/>
+				<input name="value" id="value"><br/>
+                <input type="radio" id="NX" name="type" value="PX">
+                <label for="NX">NX</label>
+                <input type="radio" id="XX" name="type" value="NX">
+                <label for="XX">XX</label>
+                <input type="radio" id="None" name="type" value="None" checked>
+                <label for="None">None</label><br>
+                <input type="checkbox" name="CH" value=true>
+                <label for="CH">CH</label><br/>
+                <input type="checkbox" name="INCR" value=true>
+                <label for="INCR">INCR</label><br/>
 				<input type="submit" value="SUBMIT">
 			</form>
 		</div>
