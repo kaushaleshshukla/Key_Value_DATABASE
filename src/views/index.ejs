@@ -64,6 +64,18 @@
                 <br/>Member<br/>
 				<input name="member" id="member"><br/>
 				<input type="submit" value="SUBMIT">
+            </form>
+            <h3>ZRANGE</h3>
+			<form name="zrange" action="/api/command/zrange" method="get">
+				Key<br/>
+                <input name="key" id="key">
+                <br/>Start<br/>
+                <input type="number" name="start" id="start">
+                <br/>Stop<br/>
+                <input type="number" name="stop" id="stop"><br/>
+                <input type="checkbox" name="WITHSCORES" value=true>
+                <label for="WITHSCORES">WITHSCORES</label><br/>
+				<input type="submit" value="SUBMIT">
 			</form>
 		</div>
 	</body>

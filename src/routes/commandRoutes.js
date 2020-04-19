@@ -210,6 +210,42 @@ let router = function(){
         .get( (req, res) =>{
             console.log("inside zrange");
             console.log(req.query);
+            if(zvalues.has(req.query.key)){
+                let start = 1*req.query.start;
+                let stop = 1*req.query.stop;
+                let len = map.get(req.query.key).length;
+                if(start<0)
+                    start = len+start;
+                if(stop<0)
+                    stop = len+stop;
+                stop++;
+                if(start>=len || stop>len || start>=stop || start<0 || stop<=0){
+                    let list = [];
+                    res.send(list);
+                }
+                else{
+                    let data = map.get(req.query.key).slice(start, stop);
+                    let list = [];
+                    console.log(start);
+                    console.log(stop);
+                    console.log(data);
+                    if(req.query.WITHSCORES){
+                        for(let i=0; i<data.length; i++){
+                            list.push([data[i][1], data[i][0]]);
+                        }
+                    }
+                    else{
+                        for(let i=0; i<data.length; i++){
+                            list.push([data[i][1]]);
+                        }
+                    }
+                    res.send(list);
+                }
+            }
+            else{
+                let list = [];
+                res.send(list);
+            }
         });
 
     // Page not found
