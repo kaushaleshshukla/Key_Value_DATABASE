@@ -4,126 +4,270 @@ const MongoClient = require('mongodb').MongoClient;
 const FastMap = require("collections/fast-map");
 const SortedSet = require("collections/sorted-set");
 
+//data structer for key value storage
 const map = FastMap();
 const zvalues = FastMap();
 
 
+// database variables
+const dbName = "Unacademy";
+const tableName = "keyValue";
+const url = "mongodb://localhost:27017";
+
 let router = function(){
     commandRouter.route('/set')
         .post( (req, res) => {
-            const hasKey = map.has(req.body.key);
+            (async function(){
+                let hasKey = map.has(req.body.key);
 
-            //getting time to live
-            let TTL = -1;
-            if(req.body.EX || req.body.PX){
-                //current time in millisecond
-                TTL =  Date.now();
-                if(req.body.EX){
-                    TTL += 1000*req.body.EX;
-                }
-                if(req.body.PX){
-                    TTL += 1*req.body.PX;
-                }
-                console.log(TTL);
-            }
-
-            if(TTL==-1 && hasKey && req.body.KEEPTTL){
-                const val = map.get(req.body.key);
-                TTL = val.TTL;
-            }
-
-            //new object for update
-            let obj = {};
-            obj.value = req.body.value;
-            obj.TTL = TTL;
-
-            //udpating value 
-            if(req.body.type=="None"){
-                if(hasKey){
-                    //update in current map
-                    map.set(req.body.key, obj);
-
-                    //update in db ...
-                    res.send("OK");
-                }
-                else{
-                    //inserting in current map
-                    map.add(obj, req.body.key);
-
-                    //inserting in db ...
-                    res.send("OK");
-                }
-            }
-            else if(req.body.type=="NX"){
-                if(hasKey){
-                    res.send("NULL");
-                }
-                else{
-                    //inserting in current map
-                    map.add(obj, req.body.key);
-
-                    //inserting in db ...
-                    res.send("OK");
-                }
-            }
-            else{
+                //dynamic loading of data from database
                 if(!hasKey){
-                    res.send("NULL");
+                        //connecting database
+                    let connection = await MongoClient.connect(url);
+
+                    //getting database
+                    let db = connection.db(dbName);
+
+                    let keyTable = db.collection(tableName);
+
+                    let result = await keyTable.findOne({"key" : req.body.key});
+
+                    if(result && !result.set){
+                        map.add(result.value, result.key);
+                        hasKey = true;
+                    }
+
+                    connection.close();
+                    
+                }
+                //getting time to live
+                let TTL = -1;
+                if(req.body.EX || req.body.PX){
+                    //current time in millisecond
+                    TTL =  Date.now();
+                    if(req.body.EX){
+                        TTL += 1000*req.body.EX;
+                    }
+                    if(req.body.PX){
+                        TTL += 1*req.body.PX;
+                    }
+                    console.log(TTL);
+                }
+
+                if(TTL==-1 && hasKey && req.body.KEEPTTL){
+                    const val = map.get(req.body.key);
+                    TTL = val.TTL;
+                }
+
+                //new object for update
+                let obj = {};
+                obj.value = req.body.value;
+                obj.TTL = TTL;
+
+                //udpating value 
+                if(req.body.type=="None"){
+                    if(hasKey){
+                        
+                        //update in current map
+                        map.set(req.body.key, obj);
+
+                        //update in db
+                        //connecting database
+                        let connection = await MongoClient.connect(url);
+
+                        //getting database
+                        let db = connection.db('Unacademy');
+
+                        let keyTable = db.collection(tableName);
+
+                        await keyTable.updateOne({"key" : req.body.key}, {$set : {"value" : obj}});
+                        connection.close();
+
+                        res.send("OK");
+                    }
+                    else{
+                        //inserting in current map
+                        map.add(obj, req.body.key);
+
+                        //current data entry for database
+                        data = {
+                            key : req.body.key,
+                            set : false,
+                            value : obj
+                        };
+                        //inserting in db 
+                        //connecting database
+                        let connection = await MongoClient.connect(url);
+
+                        //getting database
+                        let db = connection.db('Unacademy');
+
+                        let keyTable = db.collection(tableName);
+
+                        await keyTable.insertOne(data);
+                        connection.close();
+                        res.send("OK");
+                    }
+                }
+                else if(req.body.type=="NX"){
+                    if(hasKey){
+                        res.send("NULL");
+                    }
+                    else{
+                        //inserting in current map
+                        map.add(obj, req.body.key);
+
+                        //current data entry for database
+                        data = {
+                            key : req.body.key,
+                            set : false,
+                            value : obj
+                        }
+                        //inserting in db 
+                        //connecting database
+                        let connection = await MongoClient.connect(url);
+
+                        //getting database
+                        let db = connection.db('Unacademy');
+
+                        let keyTable = db.collection(tableName);
+
+                        await keyTable.insertOne(data);
+                        connection.close();
+                        res.send("OK");
+                    }
                 }
                 else{
-                    //update in current map
-                    map.set(req.body.key, obj);
+                    if(!hasKey){
+                        res.send("NULL");
+                    }
+                    else{
+                        //update in current map
+                        map.set(req.body.key, obj);
 
-                    //update in db ...
-                    res.send("OK");
+                        //update in db 
+                        //connecting database
+                        let connection = await MongoClient.connect(url);
+
+                        //getting database
+                        let db = connection.db('Unacademy');
+
+                        let keyTable = db.collection(tableName);
+
+                        await keyTable.updateOne({"key" : req.body.key}, {$set : {"value" : obj}});
+                        connection.close();
+                        res.send("OK");
+                    }
                 }
-            }
-
+            })();
         });
 
     commandRouter.route('/get')
         .get( (req, res) => {
-            const hasKey = map.has(req.query.key);
-            if(!hasKey){
-                res.send("Nil");
-            }
-            else{
-                let obj = map.get(req.query.key);
-                let TTL = obj.TTL;
-                let curTime = Date.now();
-                if(TTL!=-1 && TTL<curTime){
-                    //deleting from map
-                    map.delete(req.query.key);
-                    //deleting from db ...
+            (async function(){
+                let hasKey = map.has(req.query.key);
+                
+                //dynamic loading of data from database
+                if(!hasKey){
+                
+                        //connecting database
+                    let connection = await MongoClient.connect(url);
 
-                    res.send("Nil");
+                    //getting database
+                    let db = connection.db(dbName);
+
+                    let keyTable = db.collection(tableName);
+
+                    let result = await keyTable.findOne({"key" : req.query.key});
+                    if(result && !result.set){
+                        map.add(result.value, result.key);
+                        hasKey = true;
+                    }
+
+                    connection.close();
+                
+                }
+                if(!hasKey){
+                    res.send("Nila");
                 }
                 else{
-                    res.send(obj);
+                    let obj = map.get(req.query.key);
+                    let TTL = obj.TTL;
+                    let curTime = Date.now();
+                    if(TTL!=-1 && TTL<curTime){
+                        //deleting from map
+                        map.delete(req.query.key);
+
+                        //deleting from db
+                        //connecting database
+                        let connection = await MongoClient.connect(url);
+    
+                        //getting database
+                        let db = connection.db(dbName);
+    
+                        let keyTable = db.collection(tableName);
+    
+                        await keyTable.deleteOne({"key" : req.query.key});
+                        connection.close();
+                        res.send("Nil");
+                    }
+                    else{
+                        res.send(obj.value);
+                    }
                 }
-            }
+            })();
         });
 
     commandRouter.route('/expire')
         .post( (req, res) => {
-            const hasKey = map.has(req.body.key);
-            if(!hasKey){
-                res.send("0");
-            }
-            else{
-                let TTL = Date.now();
-                TTL += 1000*req.body.seconds;
-                let obj = map.get(req.body.key);
-                obj.TTL = TTL;
+            (async function(){
+                let hasKey = map.has(req.body.key);
+                //dynamic loading of data from database
+                if(!hasKey){
+                        //connecting database
+                    let connection = await MongoClient.connect(url);
 
-                //update in map
-                map.set(req.body.key, obj);
+                    //getting database
+                    let db = connection.db(dbName);
 
-                //update in db ...
+                    let keyTable = db.collection(tableName);
 
-                res.send("1");
-            }
-            
+                    let result = await keyTable.findOne({"key" : req.body.key});
+
+                    if(result && !result.set){
+                        map.add(result.value, result.key);
+                        hasKey = true;
+                    }
+
+                    connection.close();
+                }
+                if(!hasKey){
+                    res.send("0");
+                }
+                else{
+                    let TTL = Date.now();
+                    TTL += 1000*req.body.seconds;
+                    let obj = map.get(req.body.key);
+                    obj.TTL = TTL;
+
+                    //update in map
+                    map.set(req.body.key, obj);
+
+                    //update in db 
+                    //connecting database
+                    let connection = await MongoClient.connect(url);
+
+                    //getting database
+                    let db = connection.db(dbName);
+
+                    let keyTable = db.collection(tableName);
+
+                    await keyTable.updateOne({"key" : req.body.key}, {$set : {"value" : obj}});
+                    connection.close();
+
+                    res.send("1");
+                }
+            })();
             
         });
     
