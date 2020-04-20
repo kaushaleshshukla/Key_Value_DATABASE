@@ -1,0 +1,166 @@
+SET
+
+key -> Kaushalesh
+Value -> Shukla
+
+response -> OK
+
+key -> Mahesh
+Value -> Suthar
+EX Seconds -> 5000
+
+response -> OK
+
+key -> unacademy
+Value -> SDE 
+NX -> true
+
+response -> OK
+
+key -> RandomKey
+Value -> RandomValue
+XX -> true
+
+response -> NULL
+
+key -> TTL
+Value -> withTTL
+EX Seconds -> 50000
+
+response -> OK
+
+key -> TTL
+Value -> updateTTL
+KEEPTTL -> true
+
+response -> OK
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+GET
+
+Key -> Kaushalesh
+
+response -> Shukla
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+EXPIRE
+
+Key -> Kaushalesh
+Seconds -> 0
+
+response -> 1
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+GET
+
+Key -> Kaushalesh
+
+response -> Nil
+
+---------------------------------------------------------------------------------------------
+
+ZADD
+
+Key -> Redis
+Score -> 5
+Value -> set 
+
+response -> 1
+
+Key -> Redis
+Score -> 3
+Value -> get 
+
+response -> 1
+
+Key -> Redis
+Score -> 5
+Value -> expire 
+NX -> true
+
+response -> 1
+
+key -> Redis
+Score -> 5
+Value -> zadd 
+
+response -> 1
+
+key -> Redis
+Score -> 8
+Value -> zadd 
+XX -> true
+
+response -> 1
+
+key -> Redis
+Score -> 10
+Value -> zadd
+NX -> true
+
+response -> nil 
+
+key -> Redis
+Score -> 10
+Value -> zrange
+XX -> true
+
+response -> nil 
+
+------------------------------------------------------------------------------------------------------------------------------------------
+
+ZRANK
+
+key -> Redis
+Member -> set
+
+response -> 2
+
+key -> Redis
+Member -> get
+
+response -> 0
+
+key -> Redis
+Member -> zrange
+
+response -> nil
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+ZRANGE 
+
+key -> Redis
+Start -> 0
+Stop -> 2
+
+response -> [["get"],["expire"],["set"]]
+
+key -> Redis
+Start -> 0
+Stop -> 2
+WITHSCORE -> true
+
+response -> [["get",3],["expire",5],["set",5]]
+
+key -> Redis
+Start -> 0
+Stop -> -1
+WITHSCORE -> true
+
+response -> [["get",3],["expire",5],["set",5],["zadd",9]]
+
+key -> Redis
+Start -> -3
+Stop -> -1
+
+response -> [["expire"],["set"],["zadd"]]
+
+key -> Redis
+Start -> 5
+Stop -> 1
+
+response -> []
